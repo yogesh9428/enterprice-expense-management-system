@@ -25,6 +25,10 @@ public class Expense {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    private String userName;
+
+
+
     @Column(nullable = false, length = 50)
     private String category;  // what kind of expense
 
@@ -106,5 +110,13 @@ public class Expense {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getUserName() {
+        return user.getName();
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 }

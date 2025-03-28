@@ -15,11 +15,30 @@ const SignupPage = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSignup = (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
-    console.log('Signup Data:', formData); // Replace with API call later
-    navigate('/dashboard'); // Redirect after signup (adjust later)
+    try {
+      const response = await fetch("http://localhost:8080/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+  
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
+  
+      alert("User registered successfully!");
+      navigate("/login");
+    } catch (error) {
+      console.error("Signup Error:", error);
+      alert(error.message);
+    }
   };
+  
 
   return (
     <Container maxWidth="sm" className="full-page-container">

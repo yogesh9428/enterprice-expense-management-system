@@ -1,18 +1,45 @@
-import React, { useState } from 'react';
-import { Container, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import api from '../service/api';
+import { 
+  Container, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, 
+  Dialog, DialogActions, DialogContent, DialogTitle, TextField 
+} from '@mui/material';
 
 const ApprovalPage = () => {
-  const [expenses, setExpenses] = useState([
-    { id: 1, date: '2024-03-15', category: 'Travel', amount: 200, status: 'Pending' },
-    { id: 2, date: '2024-03-10', category: 'Food', amount: 50, status: 'Pending' }
-  ]);
-  
-  const [selectedExpense, setSelectedExpense] = useState(null);
+  const [approvals, setApprovals] = useState([]);
+  const [selectedApproval, setSelectedApproval] = useState(null);
   const [open, setOpen] = useState(false);
   const [comment, setComment] = useState('');
+  const [expenseId, setExpenseId] = useState('');
 
-  const handleOpen = (expense) => {
-    setSelectedExpense(expense);
+  // Fetch pending approvals
+  useEffect(() => {
+    fetchPendingApprovals();
+  }, []);
+
+  const fetchPendingApprovals = async () => {
+    try {
+      const response = await api.get('/api/approvals/pending');
+      setApprovals(response.data);
+    } catch (error) {
+      console.error('Error fetching approvals:', error);
+    }
+  };
+
+  // Submit expense for approval
+  const submitForApproval = async () => {
+    if (!expenseId) return;
+    try {
+      const response = await api.post(`/api/approvals/${expenseId}`);
+      setApprovals([...approvals, response.data]); // Add new approval to the list
+      setExpenseId('');
+    } catch (error) {
+      console.error('Error submitting expense for approval:', error);
+    }
+  };
+
+  const handleOpen = (approval) => {
+    setSelectedApproval(approval);
     setOpen(true);
   };
 
@@ -21,10 +48,22 @@ const ApprovalPage = () => {
     setComment('');
   };
 
-  const handleApproval = (status) => {
-    setExpenses(expenses.map(exp => 
-      exp.id === selectedExpense.id ? { ...exp, status } : exp
-    ));
+  // Approve or reject expense
+  const handleApproval = async (status) => {
+    if (!selectedApproval) return;
+    try {
+      const endpoint = status === 'Approved' 
+        ? `/api/approvals/${selectedApproval.id}/approve` 
+        : `/api/approvals/${selectedApproval.id}/reject`;
+
+      await api.put(endpoint);
+      
+      setApprovals(approvals.map(app => 
+        app.id === selectedApproval.id ? { ...app, status } : app
+      ));
+    } catch (error) {
+      console.error('Error updating approval status:', error);
+    }
     handleClose();
   };
 
@@ -34,7 +73,24 @@ const ApprovalPage = () => {
         Expense Approvals
       </Typography>
 
-      {/* Approvals Table */}
+      {/* Submit Expense for Approval */}
+      <TextField
+        label="Expense ID"
+        variant="outlined"
+        fullWidth
+        sx={{ mb: 2 }}
+        value={expenseId}
+        onChange={(e) => setExpenseId(e.target.value)}
+      />
+      <Button 
+        variant="contained" 
+        color="primary" 
+        onClick={submitForApproval}
+        sx={{ mb: 3 }}
+      >
+        Submit for Approval
+      </Button>
+
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -47,17 +103,17 @@ const ApprovalPage = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {expenses.map((expense) => (
-              <TableRow key={expense.id}>
-                <TableCell>{expense.date}</TableCell>
-                <TableCell>{expense.category}</TableCell>
-                <TableCell>${expense.amount}</TableCell>
-                <TableCell>{expense.status}</TableCell>
+            {approvals.map((approval) => (
+              <TableRow key={approval.id}>
+                <TableCell>{approval.date}</TableCell>
+                <TableCell>{approval.category}</TableCell>
+                <TableCell>${approval.amount}</TableCell>
+                <TableCell>{approval.status}</TableCell>
                 <TableCell>
-                  {expense.status === 'Pending' && (
+                  {approval.status === 'Pending' && (
                     <>
                       <Button color="success" onClick={() => handleApproval('Approved')}>Approve</Button>
-                      <Button color="error" sx={{ ml: 1 }} onClick={() => handleOpen(expense)}>Reject</Button>
+                      <Button color="error" sx={{ ml: 1 }} onClick={() => handleOpen(approval)}>Reject</Button>
                     </>
                   )}
                 </TableCell>
@@ -67,7 +123,7 @@ const ApprovalPage = () => {
         </Table>
       </TableContainer>
 
-      {/* Rejection Dialog */}
+      {/* Reject Dialog */}
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>Reject Expense</DialogTitle>
         <DialogContent>

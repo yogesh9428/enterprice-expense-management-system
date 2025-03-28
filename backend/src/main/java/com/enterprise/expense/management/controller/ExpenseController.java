@@ -1,6 +1,5 @@
 package com.enterprise.expense.management.controller;
 
-import com.enterprise.expense.management.dto.ExpenseDTO;
 import com.enterprise.expense.management.entity.Expense;
 import com.enterprise.expense.management.service.ExpenseService;
 
@@ -20,21 +19,21 @@ public class ExpenseController {
     private ExpenseService expenseService;
 
     @PostMapping
-    public ResponseEntity<ExpenseDTO> createExpense(@RequestBody Expense expense , Authentication authentication) {
-        ExpenseDTO expenseDTO = expenseService.createExpense(expense , authentication.getName());
-        return ResponseEntity.ok(expenseDTO);
+    public ResponseEntity<Expense> createExpense(@RequestBody Expense expense , Authentication authentication) {
+        Expense newexpense = expenseService.createExpense(expense , authentication.getName());
+        return ResponseEntity.ok(newexpense);
     }
 
     @GetMapping
-    public ResponseEntity<List<ExpenseDTO>> getAllExpenses() {
+    public ResponseEntity<List<Expense>> getAllExpenses() {
         return ResponseEntity.ok(expenseService.getAllExpenses());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getExpenseById(@PathVariable UUID id) {
         try{
-            ExpenseDTO expenseDTO = expenseService.getExpenseById(id);
-            return ResponseEntity.ok(expenseDTO);
+            Expense expense = expenseService.getExpenseById(id);
+            return ResponseEntity.ok(expense);
         }
         catch (RuntimeException e){
             return ResponseEntity.status(404).body("Expense does not exist");
@@ -44,8 +43,8 @@ public class ExpenseController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updateExpense(@PathVariable UUID id, @RequestBody Expense expense) {
         try {
-            ExpenseDTO expenseDTO = expenseService.updateExpense(id, expense);
-            return ResponseEntity.ok(expenseDTO);
+            Expense updatedexpense = expenseService.updateExpense(id, expense);
+            return ResponseEntity.ok(updatedexpense);
         } catch (RuntimeException e) {
             return ResponseEntity.status(404).body("Expense does not exist");
         }

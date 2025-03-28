@@ -39,9 +39,14 @@ public class AuthController {
             return ResponseEntity.status(401).body("User not found with email: " + loginRequest.getEmail());
         }
 
+//        System.out.println("Stored Password: " + user.getPassword());
+//        System.out.println("Entered Password: " + loginRequest.getPassword());
+//        System.out.println("Matches: " + passwordEncoder.matches(loginRequest.getPassword(), user.getPassword()));
+
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             return ResponseEntity.status(401).body("Password does not match.");
         }
+
         String token = jwtUtils.generateToken(user);
         return ResponseEntity.ok(token);
     }

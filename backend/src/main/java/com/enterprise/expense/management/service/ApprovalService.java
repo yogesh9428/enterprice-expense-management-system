@@ -34,7 +34,7 @@ public class ApprovalService {
 
         Approval approval = new Approval();
         approval.setExpense(expense);
-        approval.setStatus("INPROCESS");
+        approval.setStatus("PENDING");
 
         return approvalRepository.save(approval);
     }
@@ -48,9 +48,22 @@ public class ApprovalService {
             throw new RuntimeException("Manager not found");
         }
 
-        approval.setStatus("APPROVED");
-        approval.setManager(manager);
-        approval.setApprovedAt(LocalDateTime.now());
+        if ("PENDING".equals(approval.getStatus())) {
+            approval.setStatus("INPROCESS");
+            approvalRepository.save(approval);
+        }
+
+        if ("INPROCESS".equals(approval.getStatus())) {
+            approval.setStatus("APPROVED");
+            approval.setManager(manager);
+            approval.setApprovedAt(LocalDateTime.now());
+        } else if ("REJECTED".equals(approval.getStatus())) {
+            throw new RuntimeException("This expense is already rejected");
+        } else if ("APPROVED".equals(approval.getStatus())) {
+            throw new RuntimeException("This expense is already approved");
+        } else {
+            throw new RuntimeException("Something went wrong");
+        }
 
         auditLogService.logAction("Approved expense with ID " + approval.getExpense().getId(), manager);
         return approvalRepository.save(approval);
@@ -65,9 +78,23 @@ public class ApprovalService {
             throw new RuntimeException("Manager not found");
         }
 
-        approval.setStatus("REJECTED");
-        approval.setManager(manager);
-        approval.setApprovedAt(LocalDateTime.now());
+        if ("PENDING".equals(approval.getStatus())) {
+            approval.setStatus("INPROCESS");
+            approvalRepository.save(approval);
+        }
+
+        if ("INPROCESS".equals(approval.getStatus())) {
+            approval.setStatus("REJECTED");
+            approval.setManager(manager);
+            approval.setApprovedAt(LocalDateTime.now());
+        } else if ("APPROVED".equals(approval.getStatus())) {
+            throw new RuntimeException("This expense is already approved");
+        } else if ("REJECTED".equals(approval.getStatus())) {
+            throw new RuntimeException("This expense is already rejected");
+        } else {
+            throw new RuntimeException("Something went wrong");
+        }
+
         return approvalRepository.save(approval);
     }
 

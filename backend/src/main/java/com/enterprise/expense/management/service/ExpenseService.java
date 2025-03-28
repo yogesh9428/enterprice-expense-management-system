@@ -1,7 +1,5 @@
 package com.enterprise.expense.management.service;
 
-import com.enterprise.expense.management.dto.ExpenseDTO;
-import com.enterprise.expense.management.dto.UserDTO;
 import com.enterprise.expense.management.entity.Expense;
 import com.enterprise.expense.management.entity.ExpenseStatus;
 import com.enterprise.expense.management.entity.User;
@@ -13,7 +11,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class ExpenseService {
@@ -29,34 +26,31 @@ public class ExpenseService {
     @Autowired
     private AuditLogService auditLogService;
 
-    public ExpenseDTO createExpense(Expense expense, String email) {
+    public Expense createExpense(Expense expense, String email) {
         User user = userRepository.findByEmail(email);
         if (user == null) {
             throw new RuntimeException("User not found");
         }
         expense.setUser(user);
+        expense.setUserName(user.getName());
         expense.setStatus(ExpenseStatus.PENDING);
 
         Expense saveExpense = expenseRepository.save(expense);
         auditLogService.logAction("Created expense with ID " + saveExpense.getId(), user);
 
-        return modelMapper.map(saveExpense , ExpenseDTO.class);
+        return saveExpense;
     }
 
-    public List<ExpenseDTO> getAllExpenses() {
-        List<Expense> expenses = expenseRepository.findAll();
-        return expenses.stream().map
-        (expense -> modelMapper.map(expense , ExpenseDTO.class))
-                .collect(Collectors.toList());
+    public List<Expense> getAllExpenses() {
+        return expenseRepository.findAll();
     }
 
-    public ExpenseDTO getExpenseById(UUID id) {
-        Expense expense = expenseRepository.findById(id).orElseThrow(
+    public Expense getExpenseById(UUID id) {
+        return expenseRepository.findById(id).orElseThrow(
                 () -> new RuntimeException("Expense not found"));
-        return modelMapper.map(expense , ExpenseDTO.class);
     }
 
-    public ExpenseDTO updateExpense(UUID id, Expense updatedExpense) {
+    public Expense updateExpense(UUID id, Expense updatedExpense) {
         Expense existingExpense = expenseRepository.findById(id).orElseThrow(
                 () -> new RuntimeException("Expense not found !!")
         );
@@ -64,8 +58,7 @@ public class ExpenseService {
         existingExpense.setAmount(updatedExpense.getAmount());
         existingExpense.setDescription(updatedExpense.getDescription());
         existingExpense.setReceiptUrl(updatedExpense.getReceiptUrl());
-        Expense expense = expenseRepository.save(existingExpense);
-        return modelMapper.map(expense , ExpenseDTO.class);
+        return expenseRepository.save(existingExpense);
     }
 
     public void deleteExpense(UUID id) {
