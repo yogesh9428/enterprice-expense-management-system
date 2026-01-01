@@ -43,10 +43,8 @@ public class ApprovalService {
         Approval approval = approvalRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Approval not found"));
 
-        User manager = userRepository.findByEmail(managerEmail);
-        if (manager == null) {
-            throw new RuntimeException("Manager not found");
-        }
+        User manager = userRepository.findByEmail(managerEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         if ("PENDING".equals(approval.getStatus())) {
             approval.setStatus("INPROCESS");
@@ -73,10 +71,8 @@ public class ApprovalService {
         Approval approval = approvalRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Approval not found"));
 
-        User manager = userRepository.findByEmail(managerEmail);
-        if (manager == null) {
-            throw new RuntimeException("Manager not found");
-        }
+        User manager = userRepository.findByEmail(managerEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         if ("PENDING".equals(approval.getStatus())) {
             approval.setStatus("INPROCESS");

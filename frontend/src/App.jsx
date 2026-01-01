@@ -7,7 +7,7 @@ import ExpensePage from './pages/ExpensePage';
 import ApprovalPage from './pages/ApprovalPage';
 import ReportsPage from './pages/ReportPage';
 import AuditLogsPage from './pages/AuditLogsPage';
-import ProfilePage from './pages/ProfilePage';
+import ProfilePage from './pages/Profile/ProfilePage';
 import { Navigate } from 'react-router-dom';
 import { ChildCare } from '@mui/icons-material';
 import { Children } from 'react';

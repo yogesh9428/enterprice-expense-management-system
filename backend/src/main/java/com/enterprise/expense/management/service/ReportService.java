@@ -20,7 +20,9 @@ public class ReportService {
     private UserRepository userRepository;
 
     public Report generateReport(Report report ,  String email) {
-        User user = userRepository.findByEmail(email);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
         if (user == null) {
             throw new RuntimeException("User not found");
         }

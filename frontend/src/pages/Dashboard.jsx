@@ -17,7 +17,8 @@ import {
   CreditCardRounded,
   MoreVertRounded,
   ArrowUpwardRounded,
-  ArrowDownwardRounded
+  ArrowDownwardRounded,
+  PersonRounded // <--- 1. Imported this icon
 } from '@mui/icons-material';
 
 // --- 1. MOCK DATA & CONFIG ---
@@ -27,6 +28,8 @@ const sidebarItems = [
   { text: 'Approvals', icon: <FactCheckRounded />, path: '/dashboard/approvals', color: '#f59e0b' },
   { text: 'Reports', icon: <InsertChartRounded />, path: '/dashboard/reports', color: '#ec4899' },
   { text: 'Audit Logs', icon: <HistoryRounded />, path: '/dashboard/audit-logs', color: '#8b5cf6' },
+  // --- 2. Added Profile Link Here ---
+  { text: 'My Profile', icon: <PersonRounded />, path: '/dashboard/profile', color: '#0ea5e9' },
 ];
 
 const statsData = [
@@ -120,7 +123,12 @@ const Dashboard = () => {
               <Stack direction="row" spacing={2} alignItems="center">
                 <IconButton sx={{ bgcolor: '#fff', border: '1px solid #e2e8f0', boxShadow: '0 4px 10px rgba(0,0,0,0.02)' }}><SearchRounded /></IconButton>
                 <IconButton sx={{ bgcolor: '#fff', border: '1px solid #e2e8f0', boxShadow: '0 4px 10px rgba(0,0,0,0.02)' }}><NotificationsNoneRounded /></IconButton>
-                <Avatar sx={{ bgcolor: '#0f172a', border: '2px solid #fff', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>JD</Avatar>
+                
+                {/* --- 3. CLICKABLE AVATAR --- */}
+                <IconButton onClick={() => navigate('/profile')} sx={{ p: 0 }}>
+                    <Avatar sx={{ bgcolor: '#0f172a', border: '2px solid #fff', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', cursor: 'pointer' }}>JD</Avatar>
+                </IconButton>
+
               </Stack>
             </Box>
 
@@ -231,14 +239,14 @@ const Dashboard = () => {
                         </Typography>
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                         <Box>
-                           <Typography variant="caption" sx={{ opacity: 0.7 }}>Card Holder</Typography>
-                           <Typography sx={{ fontWeight: 600 }}>John Doe</Typography>
-                         </Box>
-                         <Box>
-                           <Typography variant="caption" sx={{ opacity: 0.7 }}>Expires</Typography>
-                           <Typography sx={{ fontWeight: 600 }}>12/28</Typography>
-                         </Box>
+                          <Box>
+                            <Typography variant="caption" sx={{ opacity: 0.7 }}>Card Holder</Typography>
+                            <Typography sx={{ fontWeight: 600 }}>John Doe</Typography>
+                          </Box>
+                          <Box>
+                            <Typography variant="caption" sx={{ opacity: 0.7 }}>Expires</Typography>
+                            <Typography sx={{ fontWeight: 600 }}>12/28</Typography>
+                          </Box>
                       </Box>
                     </Stack>
                   </Box>

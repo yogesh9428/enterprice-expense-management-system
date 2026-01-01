@@ -1,29 +1,41 @@
 package com.enterprise.expense.management.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "users")
+@Table(
+        name = "users",
+        indexes = {
+                @Index(name = "idx_user_email", columnList = "email")
+        }
+)
 @Data
-@Getter
-@Setter
-@AllArgsConstructor
 @NoArgsConstructor
-public class User {
+@AllArgsConstructor
+// 1. Add 'implements UserDetails' here
+public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID UID;
+    private UUID id;
 
-    @Column(nullable = false , length = 100)
+    @Column(nullable = false, length = 100)
     private String name;
 
-    @Column(nullable = false , unique = true , length = 255)
+    @Column(nullable = false, unique = true, length = 255)
     private String email;
 
+    @JsonIgnore
     @Column(nullable = false)
     private String password;
 
@@ -32,53 +44,60 @@ public class User {
     private Role role;
 
     @Column(nullable = false)
-    private String createdAt = java.time.LocalDateTime.now().toString();
+    private boolean active = true;
 
-    public String getName() {
-        return name;
+    @Column(nullable = false)
+    private boolean emailVerified = false;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    public void onCreate() {
+        this.createdAt = LocalDateTime.now();
     }
 
-    public void setName(String name) {
-        this.name = name;
+    @Column(length = 500)
+    private String profileImage;
+
+
+    // =================================================================
+    // SPRING SECURITY IMPLEMENTATION
+    // =================================================================
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        // Converts your Enum Role to a Spring Security Authority
+        return List.of(new SimpleGrantedAuthority(role.name()));
     }
 
-    public String getEmail() {
-        return email;
+    @Override
+    public String getUsername() {
+        return email; // We map 'username' to your email field
     }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
+    @Override
     public String getPassword() {
         return password;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    @Override
+    public boolean isAccountNonExpired() {
+        return true; // You can add logic here if you have account expiration
     }
 
-    public Role getRole() {
-        return role;
+    @Override
+    public boolean isAccountNonLocked() {
+        return true; // You can add logic here if you have account locking
     }
 
-    public void setRole(Role role) {
-        this.role = role;
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
     }
 
-    public UUID getUID() {
-        return UID;
-    }
-
-    public void setUID(UUID UID) {
-        this.UID = UID;
-    }
-
-    public String getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(String createdAt) {
-        this.createdAt = createdAt;
+    @Override
+    public boolean isEnabled() {
+        return active; // CONNECTED: This now uses your 'active' boolean!
     }
 }

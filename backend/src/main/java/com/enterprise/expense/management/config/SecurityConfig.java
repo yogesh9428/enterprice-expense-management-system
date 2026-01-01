@@ -26,7 +26,6 @@ public class SecurityConfig {
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
 
@@ -36,12 +35,15 @@ public class SecurityConfig {
                     CorsConfiguration config = new CorsConfiguration();
                     config.setAllowedOrigins(List.of("http://localhost:5173")); // Allow frontend
                     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Allow necessary methods
-                    config.setAllowedHeaders(List.of("Authorization", "Content-Type")); // Allow required headers
+                    config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+                    config.setExposedHeaders(List.of("Authorization"));// Allow required headers
+                    config.setAllowCredentials(true);
                     return config;
                 }))
                  .authorizeHttpRequests(auth  -> auth
                          .requestMatchers("/api/auth/**").permitAll()
                          .requestMatchers("/h2-console/**").permitAll()
+                         .requestMatchers("/uploads/**").permitAll()
                          .anyRequest().authenticated())
                  .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                  .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

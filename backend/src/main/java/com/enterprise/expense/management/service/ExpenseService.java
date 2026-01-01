@@ -27,10 +27,9 @@ public class ExpenseService {
     private AuditLogService auditLogService;
 
     public Expense createExpense(Expense expense, String email) {
-        User user = userRepository.findByEmail(email);
-        if (user == null) {
-            throw new RuntimeException("User not found");
-        }
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
         expense.setUser(user);
         expense.setUserName(user.getName());
         expense.setStatus(ExpenseStatus.PENDING);

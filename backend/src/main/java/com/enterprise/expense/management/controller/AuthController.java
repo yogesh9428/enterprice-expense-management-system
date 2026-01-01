@@ -1,53 +1,31 @@
 package com.enterprise.expense.management.controller;
 
-import com.enterprise.expense.management.entity.User;
-import com.enterprise.expense.management.service.UserService;
-import com.enterprise.expense.management.util.JwtUtils;
-import lombok.Getter;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.enterprise.expense.management.dto.AuthResponse;
+import com.enterprise.expense.management.dto.LoginRequest;
+import com.enterprise.expense.management.dto.RegisterRequest;
+import com.enterprise.expense.management.service.AuthService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
+@CrossOrigin(origins = "*") // Allow React to talk to this
 public class AuthController {
 
-    @Autowired
-    private UserService userService;
+    private final AuthService authService;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private JwtUtils jwtUtils;
+    public AuthController(AuthService authService) {
+        this.authService = authService;
+    }
 
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody User user) {
-        if (userService.existsByEmail(user.getEmail())) {
-            return ResponseEntity.badRequest().body("Email is already taken.");
-        }
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        userService.saveUser(user);
-        return ResponseEntity.ok("User registered successfully.");
+    public ResponseEntity<AuthResponse> registerUser(@Valid @RequestBody RegisterRequest request) {
+        return ResponseEntity.ok(authService.register(request));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> authenticateUser(@RequestBody User loginRequest) {
-        User user = userService.findByEmail(loginRequest.getEmail());
-        if (user == null) {
-            return ResponseEntity.status(401).body("User not found with email: " + loginRequest.getEmail());
-        }
-
-//        System.out.println("Stored Password: " + user.getPassword());
-//        System.out.println("Entered Password: " + loginRequest.getPassword());
-//        System.out.println("Matches: " + passwordEncoder.matches(loginRequest.getPassword(), user.getPassword()));
-
-        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            return ResponseEntity.status(401).body("Password does not match.");
-        }
-
-        String token = jwtUtils.generateToken(user);
-        return ResponseEntity.ok(token);
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+        return ResponseEntity.ok(authService.login(request));
     }
 }
