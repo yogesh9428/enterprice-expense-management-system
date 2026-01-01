@@ -1,6 +1,8 @@
 package com.enterprise.expense.management.controller;
 
 import com.enterprise.expense.management.entity.Expense;
+import com.enterprise.expense.management.entity.Role;
+import com.enterprise.expense.management.entity.User;
 import com.enterprise.expense.management.service.ExpenseService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +45,14 @@ public class ExpenseController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updateExpense(@PathVariable UUID id, @RequestBody Expense expense) {
         try {
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            if (user.getRole() == Role.EMPLOYEE &&
+                    !existingExpense.getUser().getId().equals(user.getId())) {
+                throw new RuntimeException("You cannot update others' expenses");
+            }
+
             Expense updatedexpense = expenseService.updateExpense(id, expense);
             return ResponseEntity.ok(updatedexpense);
         } catch (RuntimeException e) {

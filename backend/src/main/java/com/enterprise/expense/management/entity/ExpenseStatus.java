@@ -1,5 +1,10 @@
 package com.enterprise.expense.management.entity;
 
 public enum ExpenseStatus {
-    PENDING, INPROCESS , APPROVED, REJECTED
+    SUBMITTED,                 // Employee created
+    MANAGER_APPROVAL_PENDING,
+    MANAGER_APPROVED,
+    ADMIN_APPROVAL_PENDING,
+    APPROVED,
+    REJECTED
 }

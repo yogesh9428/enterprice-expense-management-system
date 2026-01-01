@@ -8,6 +8,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -59,6 +60,13 @@ public class User implements UserDetails {
 
     @Column(length = 500)
     private String profileImage;
+
+    @ManyToOne
+    @JoinColumn(name = "manager_id")
+    private User manager;   // employee → manager
+
+    @OneToMany(mappedBy = "manager")
+    private List<User> employees = new ArrayList<>();
 
 
     // =================================================================

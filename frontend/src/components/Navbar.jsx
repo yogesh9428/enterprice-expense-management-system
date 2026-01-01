@@ -1,29 +1,69 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppBar, Toolbar, Typography, IconButton, Menu, MenuItem, Box, Avatar, Tooltip, Fade, Badge, Stack } from '@mui/material';
 import { NotificationsNoneRounded, KeyboardArrowDownRounded, SettingsOutlined, LogoutRounded, AccountCircleOutlined, HomeRounded, ChevronRightRounded } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import axios from 'axios';
 
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [anchorEl, setAnchorEl] = React.useState(null);
+  const [anchorEl, setAnchorEl] = useState(null);
+  
+  // 1. State to hold the real user data
+  const [user, setUser] = useState({
+    name: '',
+    email: '',
+    role: '',
+    profileImage: ''
+  });
+
+  // 2. Fetch User Data when Navbar loads
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        const res = await axios.get('http://localhost:8080/api/user/me', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setUser(res.data);
+      } catch (err) {
+        console.error("Error fetching navbar user data:", err);
+      }
+    };
+
+    fetchUserData();
+  }, [location.pathname]); // Re-fetch when navigating to refresh data
 
   const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
 
-  // --- DYNAMIC BREADCRUMB LOGIC ---
-  // Transforms "/dashboard/expenses" into ["Dashboard", "Expenses"]
+  // Helper: Get Initials (e.g., "John Doe" -> "JD")
+  const getInitials = (name) => {
+    if (!name) return "?";
+    return name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
+  };
+
+  // Helper: Format Profile Image URL
+  const getProfileSrc = (imagePath) => {
+    if (imagePath) {
+      return `http://localhost:8080/uploads/profile-images/${imagePath}`;
+    }
+    return undefined;
+  };
+
   const pathnames = location.pathname.split('/').filter((x) => x);
-  
+
   return (
     <AppBar 
       position="sticky" 
       elevation={0}
       sx={{ 
         width: '100%',
-        backgroundColor: 'rgba(255, 255, 255, 0.8)', // Ultra-premium white glass
-        backdropFilter: 'blur(24px) saturate(180%)', // The "Apple" blur effect
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+        backdropFilter: 'blur(24px) saturate(180%)',
         borderBottom: '1px solid rgba(0, 0, 0, 0.05)',
         color: '#0f172a',
         zIndex: (theme) => theme.zIndex.drawer + 1,
@@ -32,7 +72,7 @@ const Navbar = () => {
     >
       <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 2, md: 4 }, minHeight: '70px !important' }}>
         
-        {/* --- LEFT: INTELLIGENT BREADCRUMBS --- */}
+        {/* --- LEFT: BREADCRUMBS --- */}
         <Stack direction="row" alignItems="center" spacing={1}>
           <Box 
             onClick={() => navigate('/dashboard')}
@@ -66,7 +106,6 @@ const Navbar = () => {
                         sx={{ 
                           fontWeight: isLast ? 800 : 500, 
                           fontSize: '1rem', 
-                          letterSpacing: '-0.01em',
                           color: isLast ? '#0f172a' : '#64748b',
                           textTransform: 'capitalize'
                         }}
@@ -85,29 +124,21 @@ const Navbar = () => {
         {/* --- RIGHT: ACTIONS & PROFILE --- */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, md: 2.5 } }}>
           
-          {/* 1. Alive Notification Bell */}
           <Tooltip title="Notifications">
-            <IconButton sx={{ color: '#64748b', border: '1px solid transparent', '&:hover': { bgcolor: '#f1f5f9', borderColor: '#e2e8f0' } }}>
+            <IconButton sx={{ color: '#64748b', '&:hover': { bgcolor: '#f1f5f9' } }}>
               <Badge 
                 variant="dot" 
                 color="error" 
                 overlap="circular"
-                sx={{ 
-                  '& .MuiBadge-badge': { 
-                    backgroundColor: '#ef4444', 
-                    boxShadow: '0 0 0 2px #fff',
-                    animation: 'pulse 1.5s infinite' // The "Crazy" heartbeat
-                  } 
-                }}
+                sx={{ '& .MuiBadge-badge': { animation: 'pulse 1.5s infinite' } }}
               >
                 <NotificationsNoneRounded />
               </Badge>
-              {/* CSS Pulse Animation */}
               <style>{`@keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }`}</style>
             </IconButton>
           </Tooltip>
 
-          {/* 2. Super Pill Profile Trigger */}
+          {/* DYNAMIC PROFILE PILL */}
           <Box 
             onClick={handleMenuOpen}
             sx={{ 
@@ -116,33 +147,32 @@ const Navbar = () => {
               borderRadius: '100px', 
               border: '1px solid rgba(0,0,0,0.05)',
               bgcolor: 'rgba(255,255,255,0.5)',
-              transition: 'all 0.2s ease',
-              '&:hover': { bgcolor: '#fff', borderColor: '#cbd5e1', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }
+              '&:hover': { bgcolor: '#fff', borderColor: '#cbd5e1' }
             }}
           >
             <Avatar 
+              src={getProfileSrc(user.profileImage)}
               sx={{ 
                 width: 36, height: 36, fontSize: '0.85rem', fontWeight: 700, 
-                bgcolor: '#0f172a', color: '#fff',
-                boxShadow: '0 4px 10px rgba(15, 23, 42, 0.2)' 
+                bgcolor: '#0f172a', color: '#fff' 
               }}
             >
-              JD
+              {getInitials(user.name)}
             </Avatar>
             
             <Box sx={{ display: { xs: 'none', md: 'block' }, textAlign: 'left' }}>
               <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, lineHeight: 1.2, color: '#0f172a' }}>
-                John Doe
+                {user.name || "Loading..."}
               </Typography>
-              <Typography sx={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600, letterSpacing: '0.02em' }}>
-                MANAGER
+              <Typography sx={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>
+                {user.role || "MEMBER"}
               </Typography>
             </Box>
             
             <KeyboardArrowDownRounded sx={{ color: '#94a3b8', fontSize: 18 }} />
           </Box>
 
-          {/* 3. Floating Menu */}
+          {/* DYNAMIC MENU */}
           <Menu
             anchorEl={anchorEl}
             open={Boolean(anchorEl)}
@@ -153,15 +183,17 @@ const Navbar = () => {
               sx: {
                 mt: 2, minWidth: 240, borderRadius: '20px', 
                 boxShadow: '0 40px 80px -15px rgba(0,0,0,0.1)', 
-                border: '1px solid rgba(0,0,0,0.05)', 
                 p: 1.5,
-                backgroundImage: 'linear-gradient(180deg, #fff 0%, #f8fafc 100%)'
               }
             }}
           >
             <Box sx={{ px: 2, py: 1.5, mb: 1, bgcolor: '#f1f5f9', borderRadius: '12px' }}>
-               <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a' }}>John Doe</Typography>
-               <Typography sx={{ fontSize: '0.75rem', color: '#64748b' }}>john.doe@enterprise.com</Typography>
+               <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a' }}>
+                 {user.name}
+               </Typography>
+               <Typography sx={{ fontSize: '0.75rem', color: '#64748b' }}>
+                 {user.email}
+               </Typography>
             </Box>
 
             <MenuItem onClick={() => { handleMenuClose(); navigate('/dashboard/profile'); }} sx={menuItemStyle}>
@@ -187,7 +219,6 @@ const Navbar = () => {
   );
 };
 
-// --- STYLES ---
 const menuItemStyle = {
   fontSize: '0.9rem', fontWeight: 600, borderRadius: '12px', gap: 1.5, py: 1.2, color: '#475569', mb: 0.5,
   '&:hover': { bgcolor: '#fff', color: '#0f172a', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' },
